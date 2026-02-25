@@ -92,7 +92,6 @@ Premium Magic Solutions
         className="navbar px-3 position-relative"
         style={{ background: "#2f2f2f", height: "80px" }}
       >
-        {/* LEFT SIDE (UNCHANGED) */}
         <div className="d-flex align-items-center gap-3">
           <img src={logo} alt="Logo" height="46" />
           <span className="text-white fw-semibold fs-5">
@@ -100,7 +99,6 @@ Premium Magic Solutions
           </span>
         </div>
 
-        {/* CENTER BRAND (NEW ADDITION) */}
         <div
           className="position-absolute top-50 start-50 translate-middle text-center text-white"
           style={{ lineHeight: "1.1" }}
@@ -126,7 +124,6 @@ Premium Magic Solutions
           </div>
         </div>
 
-        {/* RIGHT SIDE (UNCHANGED) */}
         <div className="ms-auto">
           <button
             className="btn btn-outline-light btn-sm"
@@ -140,64 +137,27 @@ Premium Magic Solutions
       <div className="container-fluid">
         <div className="row min-vh-100">
 
-          {/* ================= MOBILE ================= */}
-          <div className="d-md-none p-3">
-            {mobileView === "inbox" && (
-              <>
-                <h6>Inbox</h6>
-                {emails.map((e, i) => (
-                  <div
-                    key={i}
-                    className="p-3 mb-2 rounded border"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setSelectedEmail(e);
-                      setMobileView("email");
-                    }}
-                  >
-                    <strong>{e.from}</strong>
-                    <div className="small text-muted">
-                      {e.subject}
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {mobileView === "email" && selectedEmail && (
-              <>
-                <button
-                  className="btn btn-sm btn-outline-secondary mb-3"
-                  onClick={() => {
-                    setMobileView("inbox");
-                    setSelectedEmail(null);
-                  }}
-                >
-                  ← Back
-                </button>
-
-                <h6>Original Email</h6>
-                <div
-                  className="border p-3 bg-white"
-                  dangerouslySetInnerHTML={{
-                    __html: selectedEmail.body || "<p>No content</p>"
-                  }}
-                />
-
-                <h6 className="mt-3">AI Draft Reply</h6>
-                <textarea
-                  className="form-control"
-                  rows="7"
-                  value={aiReply}
-                  readOnly
-                />
-              </>
-            )}
-          </div>
-
-          {/* DESKTOP PANELS (UNCHANGED) */}
+          {/* DESKTOP LEFT PANEL */}
           <div className="d-none d-md-block col-md-5 col-lg-4 border-end p-3 bg-light">
             <h6>Inbox</h6>
+
+            {/* 🔥 ADDED BUTTONS EXACTLY UNDER INBOX */}
+            <div className="d-flex gap-2 mb-3">
+              <Link
+                to="/knowledge"
+                className="btn btn-sm btn-outline-dark flex-fill"
+              >
+                Upload PDF
+              </Link>
+
+              <Link
+                to="/saved-replies"
+                className="btn btn-sm btn-outline-dark flex-fill"
+              >
+                Saved Replies
+              </Link>
+            </div>
+
             <div style={{ maxHeight: "75vh", overflowY: "auto" }}>
               {emails.map((e, i) => (
                 <div
@@ -225,6 +185,7 @@ Premium Magic Solutions
             </div>
           </div>
 
+          {/* RIGHT PANEL */}
           <div className="d-none d-md-block col-md-7 col-lg-8 p-4">
             {selectedEmail ? (
               <>
@@ -237,6 +198,7 @@ Premium Magic Solutions
                 />
 
                 <h6 className="mt-4">AI Draft Reply</h6>
+
                 <textarea
                   className="form-control"
                   rows="7"
