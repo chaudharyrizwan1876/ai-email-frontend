@@ -1,4 +1,4 @@
-// ✅ BASE URL MUST be at the top
+ // ✅ BASE URL MUST be at the top
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 🔹 Core request helper
@@ -7,9 +7,12 @@ async function apiRequest(endpoint, options = {}) {
     throw new Error("API base URL is not defined");
   }
 
+  const token = localStorage.getItem("token");
+
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
     ...options,
   });
@@ -27,6 +30,14 @@ async function apiRequest(endpoint, options = {}) {
 
 export function loginUser(payload) {
   return apiRequest("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// ✅ Admin create employee
+export function createUser(payload) {
+  return apiRequest("/auth/create-user", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -60,6 +71,25 @@ export function fetchSavedReplies() {
 export function saveReply(payload) {
   return apiRequest("/replies", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/* ================= ADMIN USERS ================= */
+
+export function fetchUsers() {
+  return apiRequest("/auth/users");
+}
+
+export function deleteUser(id) {
+  return apiRequest(`/auth/user/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export function updateUser(id, payload) {
+  return apiRequest(`/auth/user/${id}`, {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
 }

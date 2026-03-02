@@ -6,6 +6,7 @@ import {
   saveReply,
 } from "../services/api";
 import logo from "../assets/logo.jpg";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /* -------- HELPERS -------- */
 
@@ -75,10 +76,9 @@ function cleanEmailBody(html = "") {
 function buildDefaultReply(email) {
   if (!email) return "";
   const name = extractCleanName(email.from);
-  const originalSubject = (email.subject || "").replace(/^Re:\s*/i, "");
-  return `Subject: Re: ${originalSubject}\n\nDear ${name},\n\n\n\nBest regards,\nJOAO MIRANDA\nPremium Magic Solutions`;
-}
 
+  return `Dear ${name},\n\n`;
+}
 /* ==================== MAIN ==================== */
 
 function Dashboard() {
@@ -86,11 +86,15 @@ function Dashboard() {
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [aiReply, setAiReply] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mobileShowMain, setMobileShowMain] = useState(false);
+  const [sending, setSending] = useState(false);
+const [sent, setSent] = useState(false);
+const [replyReady, setReplyReady] = useState(false);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,6 +110,10 @@ function Dashboard() {
     try { return JSON.parse(localStorage.getItem("user") || "{}"); }
     catch { return {}; }
   })();
+
+  const [signature, setSignature] = useState(() => {
+  return localStorage.getItem("signature") || "";
+});
 
   useEffect(() => { loadEmails(); }, []);
 
@@ -130,13 +138,15 @@ function Dashboard() {
   }, []);
 
   const loadEmails = async () => {
-    try {
-      const res = await fetchEmails();
-      setEmails(res.emails || []);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setRefreshing(true);
+    const res = await fetchEmails();
+    setEmails(res.emails || []);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   const doSearch = (q) => {
     const query = q.trim().toLowerCase();
@@ -175,9 +185,11 @@ function Dashboard() {
       const res = await generateAIReply(cleanText);
       const name = extractCleanName(selectedEmail.from);
       const originalSubject = (selectedEmail.subject || "").replace(/^Re:\s*/i, "");
-      setAiReply(
-        `Subject: Re: ${originalSubject}\n\nDear ${name},\n\n${res.reply}\n\nBest regards,\nJOAO MIRANDA\nPremium Magic Solutions`.trim()
-      );
+    setAiReply(
+  `Dear ${name},\n\n${res.reply}${signature ? `\n\n${signature}` : ""}`
+);
+setSent(false);
+setReplyReady(true);
     } finally {
       setGenerating(false);
     }
@@ -204,6 +216,52 @@ function Dashboard() {
       setSaving(false);
     }
   };
+
+  const handleSendEmail = async () => {
+  if (!selectedEmail || !aiReply || sending || !replyReady) return;
+
+  setSending(true);
+  setSent(false);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const emailMatch = selectedEmail.from.match(/<(.+?)>/);
+    const recipient = emailMatch ? emailMatch[1] : selectedEmail.from;
+
+    const response = await fetch(`${BASE_URL}/auth/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        to: recipient,
+        subject: `Re: ${selectedEmail.subject || ""}`,
+        message: aiReply,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Send failed");
+
+    setSent(true);
+    setReplyReady(false); // disable after send
+  } catch (err) {
+    alert("Failed to send email");
+  } finally {
+    setSending(false);
+  }
+};
+
+  const handleSignatureChange = (value) => {
+  setSignature(value);
+  localStorage.setItem("signature", value);
+};
+
+const handleRemoveSignature = () => {
+  setSignature("");
+  localStorage.removeItem("signature");
+};
 
   const logout = () => { localStorage.removeItem("user"); window.location.href = "/"; };
   const selectEmail = (e) => { setSelectedEmail(e); setMobileShowMain(true); };
@@ -255,11 +313,59 @@ function Dashboard() {
           <div className="hs-profile-wrap" ref={profileRef}>
             <div className="hs-avatar" title="Profile" onClick={() => setShowProfile(v => !v)}>JM</div>
             {showProfile && (
-              <div className="hs-profile-popup">
-                <div className="hs-profile-popup-name">JOÃO MIRANDA</div>
-                <div className="hs-profile-popup-email">{userInfo.email || userInfo.username || "—"}</div>
-              </div>
-            )}
+  <div className="hs-profile-popup">
+    <div className="hs-profile-popup-name">JOÃO MIRANDA</div>
+
+    <div className="hs-profile-popup-email">
+      {userInfo.email || userInfo.username || "—"}
+    </div>
+
+    {/* Signature Section */}
+    <div style={{ marginTop: "12px" }}>
+      <div style={{ 
+        fontSize: "12px", 
+        fontWeight: 600, 
+        marginBottom: "6px",
+        color: "var(--text-secondary)"
+      }}>
+        Email Signature
+      </div>
+
+      <textarea
+        value={signature}
+        onChange={(e) => handleSignatureChange(e.target.value)}
+        placeholder="Add your signature here..."
+        style={{
+          width: "100%",
+          minHeight: "70px",
+          fontSize: "12px",
+          padding: "6px",
+          borderRadius: "6px",
+          border: "1px solid var(--border)",
+          resize: "vertical"
+        }}
+      />
+
+      {signature && (
+        <button
+          onClick={handleRemoveSignature}
+          style={{
+            marginTop: "6px",
+            fontSize: "11px",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            border: "none",
+            cursor: "pointer",
+            background: "#ffe5e5",
+            color: "#c53030"
+          }}
+        >
+          Remove Signature
+        </button>
+      )}
+    </div>
+  </div>
+)}
           </div>
           <button className="hs-logout-btn" onClick={logout}>Logout</button>
         </div>
@@ -276,9 +382,25 @@ function Dashboard() {
 
         {/* INBOX PANEL */}
         <div className={`hs-inbox-panel ${mobileShowMain ? "mobile-hidden" : ""}`}>
-          <div className="hs-inbox-header">
-            <div className="hs-inbox-title">Support Inbox <span className="chevron">▾</span></div>
-          </div>
+          
+          <div
+  className="hs-inbox-header"
+  style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+>
+  <div className="hs-inbox-title">
+    Support Inbox <span className="chevron">▾</span>
+  </div>
+
+  <button
+    onClick={loadEmails}
+    disabled={refreshing}
+    className="btn-outline"
+    style={{ padding: "6px 12px", fontSize: "12px" }}
+  >
+    {refreshing ? "⏳ Refreshing..." : "🔄 Refresh"}
+  </button>
+</div>
+
           <div className="hs-inbox-nav">
             <div className="hs-inbox-nav-item active">
               <span className="hs-inbox-nav-label">All conversations</span>
@@ -352,7 +474,7 @@ function Dashboard() {
                           {" "}&lt;{selectedEmail.from}&gt;
                         </span>
                       </div>
-                      <div className="hs-email-card-to">To: support@premiummagicsolutions.com</div>
+            
                     </div>
                   </div>
                   {/* Cleaned email body — removes signature, quoted replies, images */}
@@ -369,21 +491,47 @@ function Dashboard() {
                       <div className="hs-ai-dot" />
                       Reply
                     </div>
-                    <button
-                      className="btn-ghost"
-                      style={{ fontSize: "11px", padding: "3px 8px" }}
-                      onClick={handleGenerateReply}
-                      disabled={generating}
-                    >
-                      {generating ? "⏳ Generating…" : "✨ Generate AI Reply"}
-                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+
+  <button
+    className="btn-ghost"
+    style={{ fontSize: "11px", padding: "3px 8px" }}
+    onClick={handleGenerateReply}
+    disabled={generating}
+  >
+    {generating ? "⏳ Generating…" : "✨ Generate AI Reply"}
+  </button>
+
+  <button
+    className="btn-teal"
+    style={{ fontSize: "11px", padding: "3px 10px" }}
+    onClick={handleSendEmail}
+    disabled={!replyReady || sending}
+  >
+    {sending
+      ? "📤 Sending..."
+      : sent
+      ? "✔ Sent"
+      : "📩 Send"}
+  </button>
+
+</div>
                   </div>
 
                   {/* Fixed height textarea — always editable, scrollable */}
                   <textarea
                     className="hs-ai-textarea"
                     value={aiReply}
-                    onChange={(ev) => setAiReply(ev.target.value)}
+                    onChange={(ev) => {
+  setAiReply(ev.target.value);
+  setSent(false);
+
+  if (ev.target.value.trim().length > 0) {
+    setReplyReady(true);
+  } else {
+    setReplyReady(false);
+  }
+}}
                     placeholder="Write your reply here…"
                   />
 

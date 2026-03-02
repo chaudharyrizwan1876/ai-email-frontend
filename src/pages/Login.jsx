@@ -10,20 +10,30 @@ function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const result = await loginUser({ email, password });
-      if (result && result.success === true) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-        navigate("/dashboard", { replace: true });
+  e.preventDefault();
+  setError("");
+
+  try {
+    const result = await loginUser({ email, password });
+
+    if (result && result.success === true) {
+      // ✅ Save user
+      localStorage.setItem("user", JSON.stringify(result.user));
+      localStorage.setItem("token", result.token); // important for protected routes
+
+      // ✅ Role-based redirect
+      if (result.user.role === "admin") {
+        navigate("/admin", { replace: true });
       } else {
-        setError(result?.message || "Login failed");
+        navigate("/dashboard", { replace: true });
       }
-    } catch (err) {
-      setError(err.message || "Login failed");
+    } else {
+      setError(result?.message || "Login failed");
     }
-  };
+  } catch (err) {
+    setError(err.message || "Login failed");
+  }
+};
 
   return (
     <div className="hs-login-wrap">
