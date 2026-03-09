@@ -6,34 +6,38 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const result = await loginUser({ email, password });
+    try {
+      const result = await loginUser({ email, password });
 
-    if (result && result.success === true) {
-      // ✅ Save user
-      localStorage.setItem("user", JSON.stringify(result.user));
-      localStorage.setItem("token", result.token); // important for protected routes
+      if (result && result.success === true) {
+        // ✅ Save user
+        localStorage.setItem("user", JSON.stringify(result.user));
+        localStorage.setItem("token", result.token);
 
-      // ✅ Role-based redirect
-      if (result.user.role === "admin") {
-        navigate("/admin", { replace: true });
+        // ✅ Role-based redirect
+        if (result.user.role === "admin") {
+          navigate("/admin", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
       } else {
-        navigate("/dashboard", { replace: true });
+        setError(result?.message || "Login failed");
+        setLoading(false);
       }
-    } else {
-      setError(result?.message || "Login failed");
+    } catch (err) {
+      setError(err.message || "Login failed");
+      setLoading(false);
     }
-  } catch (err) {
-    setError(err.message || "Login failed");
-  }
-};
+  };
 
   return (
     <div className="hs-login-wrap">
@@ -70,13 +74,24 @@ function Login() {
           <button
             className="btn-teal"
             type="submit"
-            style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", marginTop: "4px" }}
+            disabled={loading}
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              padding: "10px",
+              fontSize: "14px",
+              marginTop: "4px",
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-        <div className="hs-login-footer">© {new Date().getFullYear()} JOÃO MIRANDA</div>
+        <div className="hs-login-footer">
+          © {new Date().getFullYear()} JOÃO MIRANDA
+        </div>
       </div>
     </div>
   );

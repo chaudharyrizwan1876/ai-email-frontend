@@ -111,9 +111,7 @@ const [replyReady, setReplyReady] = useState(false);
     catch { return {}; }
   })();
 
-  const [signature, setSignature] = useState(() => {
-  return localStorage.getItem("signature") || "";
-});
+  
 
   useEffect(() => { loadEmails(); }, []);
 
@@ -186,7 +184,7 @@ const [replyReady, setReplyReady] = useState(false);
       const name = extractCleanName(selectedEmail.from);
       const originalSubject = (selectedEmail.subject || "").replace(/^Re:\s*/i, "");
     setAiReply(
-  `Dear ${name},\n\n${res.reply}${signature ? `\n\n${signature}` : ""}`
+  `Dear ${name},\n\n${res.reply}`
 );
 setSent(false);
 setReplyReady(true);
@@ -253,15 +251,6 @@ setReplyReady(true);
   }
 };
 
-  const handleSignatureChange = (value) => {
-  setSignature(value);
-  localStorage.setItem("signature", value);
-};
-
-const handleRemoveSignature = () => {
-  setSignature("");
-  localStorage.removeItem("signature");
-};
 
   const logout = () => { localStorage.removeItem("user"); window.location.href = "/"; };
   const selectEmail = (e) => { setSelectedEmail(e); setMobileShowMain(true); };
@@ -321,49 +310,7 @@ const handleRemoveSignature = () => {
     </div>
 
     {/* Signature Section */}
-    <div style={{ marginTop: "12px" }}>
-      <div style={{ 
-        fontSize: "12px", 
-        fontWeight: 600, 
-        marginBottom: "6px",
-        color: "var(--text-secondary)"
-      }}>
-        Email Signature
-      </div>
-
-      <textarea
-        value={signature}
-        onChange={(e) => handleSignatureChange(e.target.value)}
-        placeholder="Add your signature here..."
-        style={{
-          width: "100%",
-          minHeight: "70px",
-          fontSize: "12px",
-          padding: "6px",
-          borderRadius: "6px",
-          border: "1px solid var(--border)",
-          resize: "vertical"
-        }}
-      />
-
-      {signature && (
-        <button
-          onClick={handleRemoveSignature}
-          style={{
-            marginTop: "6px",
-            fontSize: "11px",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            border: "none",
-            cursor: "pointer",
-            background: "#ffe5e5",
-            color: "#c53030"
-          }}
-        >
-          Remove Signature
-        </button>
-      )}
-    </div>
+    
   </div>
 )}
           </div>
@@ -502,18 +449,19 @@ const handleRemoveSignature = () => {
     {generating ? "⏳ Generating…" : "✨ Generate AI Reply"}
   </button>
 
-  <button
-    className="btn-teal"
-    style={{ fontSize: "11px", padding: "3px 10px" }}
-    onClick={handleSendEmail}
-    disabled={!replyReady || sending}
-  >
-    {sending
-      ? "📤 Sending..."
-      : sent
-      ? "✔ Sent"
-      : "📩 Send"}
-  </button>
+  
+<button
+  className="btn-teal"
+  style={{ fontSize: "11px", padding: "3px 10px" }}
+  onClick={handleSendEmail}
+  disabled={!replyReady || sending}
+>
+  {sending
+    ? "📤 Sending..."
+    : sent
+    ? "✔ Sent"
+    : "📩 Send"}
+</button>
 
 </div>
                   </div>

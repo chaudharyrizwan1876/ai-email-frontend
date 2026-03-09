@@ -328,7 +328,7 @@ a { text-decoration: none; color: inherit; }
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  height: 220px;        /* 👈 fixed smaller height */
+  height: 270px;        /* 👈 fixed smaller height */
   display: flex;
   flex-direction: column;
   flex-shrink: 0;       /* 👈 stick to bottom */

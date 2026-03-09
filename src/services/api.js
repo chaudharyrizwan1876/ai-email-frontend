@@ -1,4 +1,4 @@
- // ✅ BASE URL MUST be at the top
+// ✅ BASE URL MUST be at the top
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 🔹 Core request helper
@@ -92,4 +92,19 @@ export function updateUser(id, payload) {
     method: "PUT",
     body: JSON.stringify(payload),
   });
+}
+
+/* ================= SIGNATURE ================= */
+
+// ✅ Save Signature
+export function saveSignature(payload) {
+  return apiRequest("/signature/save", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// Get Signature
+export function fetchSignature() {
+  return apiRequest("/signature");
 }
