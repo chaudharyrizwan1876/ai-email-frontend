@@ -423,7 +423,11 @@ function AdminDashboard() {
 
               {sigPhoto && (
                 <img
-                  src={sigPhoto}
+                  src={
+                    sigPhoto?.startsWith("http")
+                      ? sigPhoto
+                      : `${import.meta.env.VITE_API_BASE_URL}${sigPhoto}`
+                  }
                   alt=""
                   style={{
                     width: "70px",
