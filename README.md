@@ -198,6 +198,8 @@ AI-support/
 
 ✅ AI Reply Generator
 
+✅ ChatGPT API Integration
+
 ✅ Knowledge Base
 
 ✅ Saved Replies
